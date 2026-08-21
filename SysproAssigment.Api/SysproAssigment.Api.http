@@ -1,0 +1,6 @@
+@SysproAssigment.Api_HostAddress = http://localhost:5100
+
+GET {{SysproAssigment.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="SysproAssigment.Api/SysproAssigment.Api.csproj" />
+  <Project Path="SysproAssigment.Application/SysproAssigment.Application.csproj" />
+  <Project Path="SysproAssigment.Domain/SysproAssigment.Domain.csproj" />
+  <Project Path="SysproAssigment.Infrastructure/SysproAssigment.Infrastructure.csproj" />
+  <Project Path="SysproAssigment.Shared/SysproAssigment.Shared.csproj" />
+  <Project Path="SysproTech.App/SysproTech.App.csproj" Id="84fc46f6-1a4b-446e-8bda-e5f8160909e7" />
+</Solution>
