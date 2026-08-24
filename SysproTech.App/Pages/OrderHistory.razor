@@ -1,10 +1,12 @@
 @page "/order-history"
 
+@using Microsoft.AspNetCore.Authorization
 @using SysproTech.App.Interfaceses
 @using SysproTech.App.Requestses.Sales
 @using SysproTech.App.Responses
 @inject ISalesServices SalesServices
 @inject NavigationManager Navigation
+@attribute [Authorize]
 
 <PageTitle>Order History - SysproTech</PageTitle>
 

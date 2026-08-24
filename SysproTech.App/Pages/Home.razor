@@ -1,0 +1,16 @@
+﻿@page "/"
+
+
+<AuthorizeView>
+    <Authorized>
+        <Dashboard></Dashboard> 
+        </Authorized>
+
+    <NotAuthorized>
+        <Login></Login>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+}

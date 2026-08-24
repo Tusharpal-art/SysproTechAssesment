@@ -11,6 +11,8 @@ namespace SysproAssigment.Domain.Entities
         public string Description { get; set; }
         public int Quantity { get; set; } = 0;
         public decimal Price { get; set; }
+        public int? MinimumQuantity { get; set; } = 0;
+        public string? Category { get; set; } = String.Empty;
         public DateTime CreatedDate { get; set; }  = DateTime.Now;
         public DateTime DeletedDate { get; set; } 
         public bool IsDeleted { get; set; } = false;

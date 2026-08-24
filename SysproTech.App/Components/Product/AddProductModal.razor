@@ -45,8 +45,21 @@
                                     <ValidationMessage For="@(() => updateModel.Price)" class="validation-message" />
                                 </div>
                                 <div class="col-6">
+                                    <label class="form-label small font-semibold">Minimum Quantity</label>
+                                    <InputNumber class="form-control" placeholder="0" @bind-Value="updateModel.MinimumQuantity" />
+                                    <ValidationMessage For="@(() => updateModel.MinimumQuantity)" class="validation-message" />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Category </label>
+                                    <InputText class="form-control" placeholder="Ex. Home Appliances" @bind-Value="updateModel.Category" />
+                                    <ValidationMessage For="@(() => updateModel.Category)" class="validation-message" />
+                                </div>
+                                <div class="col-6">
                                     <label class="form-label small font-semibold">Quantity</label>
-                                    <InputNumber class="form-control" placeholder="0" @bind-Value="updateModel.Quantity" />
+                                    <InputNumber class="form-control" placeholder="{addModel.MinimumQuantity}" @bind-Value="updateModel.Quantity" />
                                     <ValidationMessage For="@(() => updateModel.Quantity)" class="validation-message" />
                                 </div>
                             </div>
@@ -91,8 +104,21 @@
                                     <ValidationMessage For="@(() => addModel.Price)" class="validation-message" />
                                 </div>
                                 <div class="col-6">
+                                    <label class="form-label small font-semibold">Minimum Quantity</label>
+                                    <InputNumber class="form-control" placeholder="0" @bind-Value="addModel.MinimumQuantity" />
+                                    <ValidationMessage For="@(() => addModel.MinimumQuantity)" class="validation-message" />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Category </label>
+                                    <InputText class="form-control" placeholder="Ex. Home Appliances" @bind-Value="addModel.Category" />
+                                    <ValidationMessage For="@(() => addModel.Category)" class="validation-message" />
+                                </div>
+                                <div class="col-6">
                                     <label class="form-label small font-semibold">Quantity</label>
-                                    <InputNumber class="form-control" placeholder="0" @bind-Value="addModel.Quantity" />
+                                    <InputNumber class="form-control" @bind-Value="addModel.Quantity" />
                                     <ValidationMessage For="@(() => addModel.Quantity)" class="validation-message" />
                                 </div>
                             </div>
@@ -145,7 +171,10 @@
                     Name = ProductToEdit.Name,
                     Description = ProductToEdit.Description,
                     Price = ProductToEdit.Price,
-                    Quantity = ProductToEdit.Quantity
+                    Quantity = ProductToEdit.Quantity,
+                    MinimumQuantity = ProductToEdit.MinimumQuantity,
+                    Category = ProductToEdit.Category
+          
                 };
             }
             else

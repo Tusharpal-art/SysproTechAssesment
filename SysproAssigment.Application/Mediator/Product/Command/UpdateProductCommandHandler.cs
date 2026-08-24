@@ -33,6 +33,8 @@ namespace SysproAssigment.Application.Mediator.Product.Command
             productExist.Price = request.Price;
             productExist.Name =  request.Name; ;
             productExist.Description = request.Description;
+            productExist.Category = request.Category;
+            productExist.MinimumQuantity = request.MinimumQuantity;
 
             var result = await unitOfWork.GetRepository<Products>().UpdateAsync(productExist);
             await unitOfWork.SaveAsync();

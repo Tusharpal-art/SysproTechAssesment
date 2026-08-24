@@ -1,5 +1,5 @@
 using FluentValidation;
-using SysproTech.App.Requestses;
+using SysproTech.App.Requestses.Product;
 
 namespace SysproTech.App.Validations.Product
 {
@@ -18,8 +18,10 @@ namespace SysproTech.App.Validations.Product
                 .NotEmpty().WithMessage("Description is required.")
                 .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.");
 
+            RuleFor(x => x.MinimumQuantity).GreaterThan(0).WithMessage("Minimum Quantity should be greater than 0.");
             RuleFor(x => x.Quantity)
-                .GreaterThanOrEqualTo(0).WithMessage("Quantity cannot be negative.");
+                .GreaterThanOrEqualTo(x => x.MinimumQuantity).WithMessage("Quantity Should be greater then minimum quantity");
+            RuleFor(x => x.Category).NotEmpty().WithMessage("Category cannot be empty");
 
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("Price must be greater than 0.");

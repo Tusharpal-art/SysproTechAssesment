@@ -1,5 +1,4 @@
-﻿using SysproTech.App.Requestses;
-using SysproTech.App.Requestses.Product;
+﻿using SysproTech.App.Requestses.Product;
 using SysproTech.App.Res;
 using SysproTech.App.Responses;
 

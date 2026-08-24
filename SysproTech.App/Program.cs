@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SysproTech.App;
 using SysproTech.App.AuthenticationState;
 using SysproTech.App.Interfaceses;
+using SysproTech.App.Requestses.Product;
 using SysproTech.App.Serviceses;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -22,7 +23,7 @@ builder.Services.AddScoped<ISalesServices, SalesServices>();
 builder.Services.AddTransient<FluentValidation.IValidator<SysproTech.App.Requestses.Auth.LoginModel>, SysproTech.App.Validations.Auth.LoginModelValidator>();
 builder.Services.AddTransient<FluentValidation.IValidator<SysproTech.App.Requestses.Auth.RegistrationModel>, SysproTech.App.Validations.Auth.RegistrationModelValidator>();
 builder.Services.AddTransient<FluentValidation.IValidator<SysproTech.App.Requestses.Product.AddProductModel>, SysproTech.App.Validations.Product.AddProductModelValidator>();
-builder.Services.AddTransient<FluentValidation.IValidator<SysproTech.App.Requestses.UpdateProductRequest>, SysproTech.App.Validations.Product.UpdateProductRequestValidator>();
+builder.Services.AddTransient<FluentValidation.IValidator<UpdateProductRequest>, SysproTech.App.Validations.Product.UpdateProductRequestValidator>();
 
 await builder.Build().RunAsync();
 
