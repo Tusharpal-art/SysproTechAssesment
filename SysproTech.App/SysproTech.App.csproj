@@ -19,13 +19,7 @@
 
   <ItemGroup>
     <Folder Include="Components\" />
-    <Folder Include="Requestses\Sales\" />
-    <Folder Include="Requestses\Product\" />
     <Folder Include="Validations\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\SysproAssigment.Shared\SysproAssigment.Shared.csproj" />
   </ItemGroup>
 
 </Project>

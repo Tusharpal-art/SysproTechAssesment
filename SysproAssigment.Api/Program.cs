@@ -54,6 +54,7 @@ builder.Services.AddDbContext<ApplicationContext>(options => options.UseLazyLoad
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductServices, ProductServices>();
 builder.Services.AddScoped<IAuthServices, AuthServices>();
+builder.Services.AddScoped<ISalesServices,SalesServices>();
 
 builder.Services.AddIdentityCore<Users>()
 .AddRoles<IdentityRole<Guid>>()
@@ -87,7 +88,15 @@ builder.Services.Configure<IdentityOptions>(o =>
 builder.Services.AddApplicationServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 var app = builder.Build();
 
@@ -97,7 +106,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseExceptionHandler(_ => { });
 app.UseAuthorization();

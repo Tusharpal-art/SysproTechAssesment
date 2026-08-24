@@ -14,14 +14,14 @@ namespace SysproAssigment.Api.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterAsync([FromBody] Application.Request.Auth.RegisterRequest request)
         {
-            var result = await mediator.Send(request);
+            Result<RegisterRespone> result = await mediator.Send(request);
             return Ok(result);
         }
 
         [HttpPost("Login")]
         public async Task<IActionResult> LoginAsync([FromBody] Application.Request.Auth.LoginRequest request)
         {
-           var result = await mediator.Send(request);
+           Result<LoginResponse> result = await mediator.Send(request);
             return Ok(result);
         }
     }

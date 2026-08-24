@@ -8,6 +8,7 @@ namespace SysproAssigment.Application.Interfaces
     {
         IGenericRespository<TEntity> GetRepository<TEntity>() where TEntity : class;
         IProductServices productServices { get; }
+        ISalesServices SalesServices { get; }
         Task SaveAsync();
     }
 }

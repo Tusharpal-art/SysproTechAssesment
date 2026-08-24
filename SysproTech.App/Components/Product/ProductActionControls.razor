@@ -1,0 +1,145 @@
+@using SysproTech.App.Interfaceses
+@using SysproTech.App.Requestses.Sales
+@using SysproTech.App.Responses
+@inject ISalesServices SalesServices
+
+<div class="action-controls-container">
+    <div class="d-inline-flex align-items-center gap-2">
+        @if (Product != null && !Product.IsDeleted)
+        {
+            @if (Product.Quantity <= 0)
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Out of Stock</span>
+            }
+            else
+            {
+                <div class="quantity-counter border border-secondary-subtle rounded d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none px-2 py-0 text-light btn-counter" 
+                            @onclick="DecreaseQuantity" disabled="@(purchaseQuantity <= 1 || isPurchasing)">
+                        -
+                    </button>
+                    <span class="px-2 small fw-bold text-light">@purchaseQuantity</span>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none px-2 py-0 text-light btn-counter" 
+                            @onclick="IncreaseQuantity" disabled="@(purchaseQuantity >= Product.Quantity || isPurchasing)">
+                        +
+                    </button>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-success btn-buy" 
+                        @onclick="HandlePurchase" disabled="@(isPurchasing || purchaseQuantity > Product.Quantity)">
+                    @if (isPurchasing)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        <span>Buy</span>
+                    }
+                </button>
+            }
+        }
+
+        <button type="button" class="btn btn-sm btn-outline-primary btn-edit" @onclick="() => OnEditRequested.InvokeAsync(Product)" title="Edit Product">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+        </button>
+    </div>
+
+    @if (purchaseQuantity >= Product?.Quantity && Product?.Quantity > 0)
+    {
+        <div class="validation-warning mt-1">No product left</div>
+    }
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="small mt-1 @(isError ? "text-danger" : "text-success")">@statusMessage</div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProductResponse Product { get; set; } = default!;
+    [Parameter] public EventCallback<ProductResponse> OnEditRequested { get; set; }
+    [Parameter] public EventCallback OnPurchaseCompleted { get; set; }
+
+    private int purchaseQuantity = 1;
+    private bool isPurchasing = false;
+    private string? statusMessage;
+    private bool isError = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Product != null)
+        {
+            if (purchaseQuantity > Product.Quantity)
+            {
+                purchaseQuantity = Math.Max(1, Product.Quantity);
+            }
+        }
+    }
+
+    private void IncreaseQuantity()
+    {
+        if (Product != null && purchaseQuantity < Product.Quantity)
+        {
+            purchaseQuantity++;
+        }
+    }
+
+    private void DecreaseQuantity()
+    {
+        if (purchaseQuantity > 1)
+        {
+            purchaseQuantity--;
+        }
+    }
+
+    private async Task HandlePurchase()
+    {
+        if (Product == null || purchaseQuantity <= 0) return;
+
+        isPurchasing = true;
+        statusMessage = null;
+        isError = false;
+
+        try
+        {
+            var orderModel = new AddOrderMModel
+            {
+                ProductId = Product.Id,
+                ProductQuantity = purchaseQuantity
+            };
+
+            var result = await SalesServices.AddOrder(orderModel);
+
+            if (result != null && result.Success)
+            {
+                statusMessage = "Purchased!";
+                purchaseQuantity = 1;
+                await Task.Delay(1000);
+                statusMessage = null;
+                await OnPurchaseCompleted.InvokeAsync();
+            }
+            else
+            {
+                isError = true;
+                statusMessage = result?.ErrorMessage ?? "Purchase failed.";
+            }
+        }
+        catch (Exception ex)
+        {
+            isError = true;
+            statusMessage = ex.Message;
+        }
+        finally
+        {
+            isPurchasing = false;
+        }
+    }
+}

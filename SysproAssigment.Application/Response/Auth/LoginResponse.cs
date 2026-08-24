@@ -4,5 +4,5 @@ using System.Text;
 
 namespace SysproAssigment.Application.Response.Auth
 {
-    public record LoginResponse(string Token);
+    public record LoginResponse(string? Token);
 }

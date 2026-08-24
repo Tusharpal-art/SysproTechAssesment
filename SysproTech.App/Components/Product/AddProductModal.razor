@@ -1,0 +1,221 @@
+@using Blazored.FluentValidation
+@using SysproTech.App.Interfaceses
+@using SysproTech.App.Requestses
+@using SysproTech.App.Requestses.Product
+@using SysproTech.App.Responses
+@inject IProductServices ProductServices
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">@(IsEditMode ? "Update Product" : "Add New Product")</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger py-2 small mb-3">@errorMessage</div>
+                    }
+
+                    @if (IsEditMode)
+                    {
+                        <EditForm Model="@updateModel" OnValidSubmit="HandleUpdateProduct">
+                            <FluentValidationValidator />
+
+                            <div class="mb-3">
+                                <label class="form-label small font-semibold">Product Name</label>
+                                <InputText class="form-control" placeholder="e.g. Laptop Bag" @bind-Value="updateModel.Name" />
+                                <ValidationMessage For="@(() => updateModel.Name)" class="validation-message" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small font-semibold">Description</label>
+                                <InputTextArea class="form-control" rows="3" placeholder="Enter product description..." @bind-Value="updateModel.Description" />
+                                <ValidationMessage For="@(() => updateModel.Description)" class="validation-message" />
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Price ($)</label>
+                                    <InputNumber class="form-control" placeholder="0.00" @bind-Value="updateModel.Price" />
+                                    <ValidationMessage For="@(() => updateModel.Price)" class="validation-message" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Quantity</label>
+                                    <InputNumber class="form-control" placeholder="0" @bind-Value="updateModel.Quantity" />
+                                    <ValidationMessage For="@(() => updateModel.Quantity)" class="validation-message" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal" disabled="@isSubmitting">Cancel</button>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Update Product</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <EditForm Model="@addModel" OnValidSubmit="HandleAddProduct">
+                            <FluentValidationValidator />
+
+                            <div class="mb-3">
+                                <label class="form-label small font-semibold">Product Name</label>
+                                <InputText class="form-control" placeholder="e.g. Laptop Bag" @bind-Value="addModel.Name" />
+                                <ValidationMessage For="@(() => addModel.Name)" class="validation-message" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small font-semibold">Description</label>
+                                <InputTextArea class="form-control" rows="3" placeholder="Enter product description..." @bind-Value="addModel.Description" />
+                                <ValidationMessage For="@(() => addModel.Description)" class="validation-message" />
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Price ($)</label>
+                                    <InputNumber class="form-control" placeholder="0.00" @bind-Value="addModel.Price" />
+                                    <ValidationMessage For="@(() => addModel.Price)" class="validation-message" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small font-semibold">Quantity</label>
+                                    <InputNumber class="form-control" placeholder="0" @bind-Value="addModel.Quantity" />
+                                    <ValidationMessage For="@(() => addModel.Quantity)" class="validation-message" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal" disabled="@isSubmitting">Cancel</button>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Save Product</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public ProductResponse? ProductToEdit { get; set; }
+    [Parameter] public EventCallback OnProductSaved { get; set; }
+
+    private AddProductModel addModel = new AddProductModel { Name = "", Description = "" };
+    private UpdateProductRequest updateModel = new UpdateProductRequest { Name = "", Description = "" };
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private bool IsEditMode => ProductToEdit != null;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible)
+        {
+            errorMessage = null;
+            if (ProductToEdit != null)
+            {
+                updateModel = new UpdateProductRequest
+                {
+                    Id = ProductToEdit.Id,
+                    Name = ProductToEdit.Name,
+                    Description = ProductToEdit.Description,
+                    Price = ProductToEdit.Price,
+                    Quantity = ProductToEdit.Quantity
+                };
+            }
+            else
+            {
+                addModel = new AddProductModel { Name = "", Description = "", Price = 0, Quantity = 0 };
+            }
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleAddProduct()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ProductServices.AddProduct(addModel);
+
+            if (result != null && result.Success)
+            {
+                await CloseModal();
+                await OnProductSaved.InvokeAsync();
+            }
+            else
+            {
+                errorMessage = result?.ErrorMessage ?? "Failed to add product. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task HandleUpdateProduct()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ProductServices.UpdateProduct(updateModel);
+
+            if (result != null && result.Success)
+            {
+                await CloseModal();
+                await OnProductSaved.InvokeAsync();
+            }
+            else
+            {
+                errorMessage = result?.ErrorMessage ?? "Failed to update product. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

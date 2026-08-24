@@ -1,7 +1,10 @@
 ﻿using Blazored.LocalStorage;
-using SysproAssigment.Shared.Response;
+
 using SysproTech.App.Interfaceses;
+using SysproTech.App.Res;
+using SysproTech.App.Responses;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace SysproTech.App.Serviceses
 {
@@ -77,6 +80,14 @@ namespace SysproTech.App.Serviceses
         {
             try
             {
+                // 
+                var json = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(json);
+
+               // Result<LoginResponse>? results =
+                 //   JsonSerializer.Deserialize<Result<LoginResponse>>(json);
+
                 Result<T>? result = await response.Content.ReadFromJsonAsync<Result<T>>();
                 return result ?? Result<T>.Failure("Invalid response format");
             }

@@ -1,0 +1,326 @@
+@page "/dashboard"
+
+@using SysproTech.App.Components.Product
+@using SysproTech.App.Interfaceses
+@using SysproTech.App.Requestses.Product
+@using SysproTech.App.Responses
+@inject IProductServices ProductServices
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Products</PageTitle>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="dashboard-title">Product Dashboard</h2>
+            <p class="dashboard-subtitle">Manage and view your product catalog with search, sorting, and pagination.</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline-light me-2" @onclick="LoadProducts" title="Refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+            </button>
+            <button class="btn btn-primary btn-add-product" @onclick="OpenAddModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Product
+            </button>
+        </div>
+    </div>
+
+    <!-- Controls Bar: Search, Filter, Page Size -->
+    <div class="controls-card mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="search-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="form-control search-input" placeholder="Search products by name or description..." 
+                           @bind="requestModel.Search" @bind:event="oninput" @onkeyup="HandleSearchKeyUp" />
+                    @if (!string.IsNullOrEmpty(requestModel.Search))
+                    {
+                        <button type="button" class="btn-clear-search" @onclick="ClearSearch">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="showDeletedSwitch" 
+                           checked="@(!requestModel.IsDeleted)" @onchange="OnShowDeletedChanged">
+                    <label class="form-check-label" for="showDeletedSwitch">
+                        Show Active Only
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-4 d-flex justify-content-md-end align-items-center gap-2">
+                <label class="page-size-label mb-0">Page Size:</label>
+                <select class="form-select page-size-select" value="@requestModel.PageSize" @onchange="OnPageSizeChanged">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Alert -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- Product Table Card -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" @onclick='() => SortTable("Name")'>
+                            Product Name @GetSortIcon("Name")
+                        </th>
+                        <th>Description</th>
+                        <th class="sortable text-end" @onclick='() => SortTable("Price")'>
+                            Price @GetSortIcon("Price")
+                        </th>
+                        <th class="sortable text-end" @onclick='() => SortTable("Quantity")'>
+                            Quantity @GetSortIcon("Quantity")
+                        </th>
+                        <th class="sortable text-center" @onclick='() => SortTable("CreatedDate")'>
+                            Created Date @GetSortIcon("CreatedDate")
+                        </th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 text-muted">Loading products...</p>
+                            </td>
+                        </tr>
+                    }
+                    else if (products == null || !products.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon mb-2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                </svg>
+                                <h5>No Products Found</h5>
+                                <p class="text-muted">Try adjusting your search filter or add a new product.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in products)
+                        {
+                            <tr>
+                                <td class="fw-semibold product-name">@item.Name</td>
+                                <td class="product-desc">@(string.IsNullOrWhiteSpace(item.Description) ? "-" : item.Description)</td>
+                                <td class="text-end fw-bold text-success">$@item.Price.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="badge @(item.Quantity > 10 ? "bg-info" : (item.Quantity > 0 ? "bg-warning text-dark" : "bg-danger"))">
+                                        @item.Quantity
+                                    </span>
+                                </td>
+                                <td class="text-center">@item.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="text-center">
+                                    @if (item.IsDeleted)
+                                    {
+                                        <span class="status-badge deleted">Deleted</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge active">Active</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <ProductActionControls Product="item" OnEditRequested="OpenEditModal" OnPurchaseCompleted="LoadProducts" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        @if (totalCount > 0)
+        {
+            <div class="table-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="pagination-info">
+                    Showing <span>@((requestModel.PageNumber - 1) * requestModel.PageSize + 1)</span>
+                    to <span>@(Math.Min(requestModel.PageNumber * requestModel.PageSize, totalCount))</span>
+                    of <span>@totalCount</span> entries
+                </div>
+
+                <ul class="pagination mb-0">
+                    <li class="page-item @(requestModel.PageNumber == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(requestModel.PageNumber - 1)">Previous</button>
+                    </li>
+
+                    @for (int i = 1; i <= TotalPages; i++)
+                    {
+                        var pageIndex = i;
+                        <li class="page-item @(requestModel.PageNumber == pageIndex ? "active" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(pageIndex)">@pageIndex</button>
+                        </li>
+                    }
+
+                    <li class="page-item @(requestModel.PageNumber == TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(requestModel.PageNumber + 1)">Next</button>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Reused Modal Component -->
+<AddProductModal @bind-IsVisible="showProductModal" ProductToEdit="selectedProduct" OnProductSaved="LoadProducts" />
+
+@code {
+    private GetProductListModel requestModel = new GetProductListModel();
+    private List<ProductResponse> products = new List<ProductResponse>();
+    private int totalCount = 0;
+    private bool isLoading = true;
+    private bool showProductModal = false;
+    private ProductResponse? selectedProduct = null;
+    private string? errorMessage;
+
+    private int TotalPages => (int)Math.Ceiling((double)totalCount / requestModel.PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ProductServices.GetProductList(requestModel);
+
+            if (result != null && result.Success && result.Data != null)
+            {
+                products = result.Data.Records ?? new List<ProductResponse>();
+                totalCount = result.Data.TotalCount;
+            }
+            else
+            {
+                errorMessage = result?.ErrorMessage ?? "Failed to retrieve products.";
+                products.Clear();
+                totalCount = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading products: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddModal()
+    {
+        selectedProduct = null;
+        showProductModal = true;
+    }
+
+    private void OpenEditModal(ProductResponse item)
+    {
+        selectedProduct = item;
+        showProductModal = true;
+    }
+
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            requestModel.PageNumber = 1;
+            await LoadProducts();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        requestModel.Search = null;
+        requestModel.PageNumber = 1;
+        await LoadProducts();
+    }
+
+    private async Task OnShowDeletedChanged(ChangeEventArgs e)
+    {
+        bool showActiveOnly = (bool)(e.Value ?? false);
+        requestModel.IsDeleted = !showActiveOnly;
+        requestModel.PageNumber = 1;
+        await LoadProducts();
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            requestModel.PageSize = newSize;
+            requestModel.PageNumber = 1;
+            await LoadProducts();
+        }
+    }
+
+    private async Task SortTable(string columnName)
+    {
+        if (requestModel.SortBy == columnName)
+        {
+            requestModel.IsAscending = !requestModel.IsAscending;
+        }
+        else
+        {
+            requestModel.SortBy = columnName;
+            requestModel.IsAscending = true;
+        }
+        await LoadProducts();
+    }
+
+    private MarkupString GetSortIcon(string columnName)
+    {
+        if (requestModel.SortBy != columnName)
+        {
+            return new MarkupString("<span class='sort-arrow muted'>↕</span>");
+        }
+        return new MarkupString(requestModel.IsAscending ? "<span class='sort-arrow active'>↑</span>" : "<span class='sort-arrow active'>↓</span>");
+    }
+
+    private async Task ChangePage(int newPage)
+    {
+        if (newPage >= 1 && newPage <= TotalPages)
+        {
+            requestModel.PageNumber = newPage;
+            await LoadProducts();
+        }
+    }
+}

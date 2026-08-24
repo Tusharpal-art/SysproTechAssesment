@@ -1,0 +1,297 @@
+@page "/order-history"
+
+@using SysproTech.App.Interfaceses
+@using SysproTech.App.Requestses.Sales
+@using SysproTech.App.Responses
+@inject ISalesServices SalesServices
+@inject NavigationManager Navigation
+
+<PageTitle>Order History - SysproTech</PageTitle>
+
+<div class="orders-wrapper">
+    <div class="orders-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="orders-title">Order History</h2>
+            <p class="orders-subtitle">View past purchases, product details, unit prices, total amounts, and dates.</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline-light" @onclick="LoadOrders" title="Refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+                <span class="ms-1">Refresh</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Controls Bar: Search & Page Size -->
+    <div class="controls-card mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="search-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="form-control search-input" placeholder="Search orders by product name or order ID..." 
+                           @bind="requestModel.Search" @bind:event="oninput" @onkeyup="HandleSearchKeyUp" />
+                    @if (!string.IsNullOrEmpty(requestModel.Search))
+                    {
+                        <button type="button" class="btn-clear-search" @onclick="ClearSearch">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="showDeletedSwitch" 
+                           checked="@(!requestModel.IsDeleted)" @onchange="OnShowDeletedChanged">
+                    <label class="form-check-label" for="showDeletedSwitch">
+                        Show Active Only
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-4 d-flex justify-content-md-end align-items-center gap-2">
+                <label class="page-size-label mb-0">Page Size:</label>
+                <select class="form-select page-size-select" value="@requestModel.PageSize" @onchange="OnPageSizeChanged">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Alert -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-4" role="alert">
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- Orders Table Card -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" @onclick='() => SortTable("Id")'>
+                            Order # @GetSortIcon("Id")
+                        </th>
+                        <th>Product Name</th>
+                        <th class="sortable text-center" @onclick='() => SortTable("ProductCount")'>
+                            Quantity @GetSortIcon("ProductCount")
+                        </th>
+                        <th class="sortable text-end" @onclick='() => SortTable("UnitPrice")'>
+                            Unit Price @GetSortIcon("UnitPrice")
+                        </th>
+                        <th class="sortable text-end" @onclick='() => SortTable("TotalPrice")'>
+                            Total Price @GetSortIcon("TotalPrice")
+                        </th>
+                        <th class="sortable text-center" @onclick='() => SortTable("OrderDate")'>
+                            Order Date @GetSortIcon("OrderDate")
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 text-muted">Loading order history...</p>
+                            </td>
+                        </tr>
+                    }
+                    else if (orders == null || !orders.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon mb-2">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                                <h5>No Orders Found</h5>
+                                <p class="text-muted">You haven't placed any orders yet or search results are empty.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in orders)
+                        {
+                            <tr>
+                                <td class="fw-bold order-id">#@item.Id</td>
+                                <td>
+                                    <div class="fw-semibold">@(item.Product?.Name ?? "Product ID: " + item.ProductId)</div>
+                                    @if (!string.IsNullOrWhiteSpace(item.Product?.Description))
+                                    {
+                                        <div class="small text-muted text-truncate" style="max-width: 250px;">@item.Product.Description</div>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary px-2 py-1">@item.ProductCount</span>
+                                </td>
+                                <td class="text-end">$@item.UnitPrice.ToString("N2")</td>
+                                <td class="text-end fw-bold text-success">$@((item.TotalPrice ?? (item.UnitPrice * item.ProductCount)).ToString("N2"))</td>
+                                <td class="text-center">@item.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        @if (totalCount > 0)
+        {
+            <div class="table-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="pagination-info">
+                    Showing <span>@((requestModel.PageNumber - 1) * requestModel.PageSize + 1)</span>
+                    to <span>@(Math.Min(requestModel.PageNumber * requestModel.PageSize, totalCount))</span>
+                    of <span>@totalCount</span> entries
+                </div>
+
+                <ul class="pagination mb-0">
+                    <li class="page-item @(requestModel.PageNumber == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(requestModel.PageNumber - 1)">Previous</button>
+                    </li>
+
+                    @for (int i = 1; i <= TotalPages; i++)
+                    {
+                        var pageIndex = i;
+                        <li class="page-item @(requestModel.PageNumber == pageIndex ? "active" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(pageIndex)">@pageIndex</button>
+                        </li>
+                    }
+
+                    <li class="page-item @(requestModel.PageNumber == TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(requestModel.PageNumber + 1)">Next</button>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private GetAllSalesListRequest requestModel = new GetAllSalesListRequest();
+    private List<SalesResponse> orders = new List<SalesResponse>();
+    private int totalCount = 0;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private int TotalPages => (int)Math.Ceiling((double)totalCount / requestModel.PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await SalesServices.GetAllOrderList(requestModel);
+
+            if (result != null && result.Success && result.Data != null)
+            {
+                orders = result.Data.Records ?? new List<SalesResponse>();
+                totalCount = result.Data.TotalCount;
+            }
+            else
+            {
+                errorMessage = result?.ErrorMessage ?? "Failed to retrieve order history.";
+                orders.Clear();
+                totalCount = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading orders: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            requestModel.PageNumber = 1;
+            await LoadOrders();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        requestModel.Search = null;
+        requestModel.PageNumber = 1;
+        await LoadOrders();
+    }
+
+    private async Task OnShowDeletedChanged(ChangeEventArgs e)
+    {
+        bool showActiveOnly = (bool)(e.Value ?? false);
+        requestModel.IsDeleted = !showActiveOnly;
+        requestModel.PageNumber = 1;
+        await LoadOrders();
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            requestModel.PageSize = newSize;
+            requestModel.PageNumber = 1;
+            await LoadOrders();
+        }
+    }
+
+    private async Task SortTable(string columnName)
+    {
+        if (requestModel.SortBy == columnName)
+        {
+            requestModel.IsAscending = !requestModel.IsAscending;
+        }
+        else
+        {
+            requestModel.SortBy = columnName;
+            requestModel.IsAscending = true;
+        }
+        await LoadOrders();
+    }
+
+    private MarkupString GetSortIcon(string columnName)
+    {
+        if (requestModel.SortBy != columnName)
+        {
+            return new MarkupString("<span class='sort-arrow muted'>↕</span>");
+        }
+        return new MarkupString(requestModel.IsAscending ? "<span class='sort-arrow active'>↑</span>" : "<span class='sort-arrow active'>↓</span>");
+    }
+
+    private async Task ChangePage(int newPage)
+    {
+        if (newPage >= 1 && newPage <= TotalPages)
+        {
+            requestModel.PageNumber = newPage;
+            await LoadOrders();
+        }
+    }
+}

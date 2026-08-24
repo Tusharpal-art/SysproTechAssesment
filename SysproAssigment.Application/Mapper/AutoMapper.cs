@@ -3,6 +3,7 @@ using SysproAssigment.Application.Request.Auth;
 using SysproAssigment.Application.Request.Product;
 using SysproAssigment.Application.Response.Auth;
 using SysproAssigment.Application.Response.Product;
+using SysproAssigment.Application.Response.Sales;
 using SysproAssigment.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace SysproAssigment.Application.Mapper
             CreateMap<Users, RegisterRespone>().ReverseMap();
             CreateMap<Products, ProductResponse>().ReverseMap();
             CreateMap<AddProductRequest, Products>().ReverseMap();
+            CreateMap<Sales, SalesReponse>().ReverseMap();
            
         }
     }

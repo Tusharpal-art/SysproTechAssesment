@@ -6,11 +6,13 @@ using System.Text;
 
 namespace SysproAssigment.Infrastructure.Repositories
 {
-    public class UnitOfWork(ApplicationContext context, IProductServices product) : IUnitOfWork
+    public class UnitOfWork(ApplicationContext context, IProductServices product,ISalesServices salesServices) : IUnitOfWork
     {
         private readonly ApplicationContext dbContext = context;
         private Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
         public IProductServices productServices => product;
+
+        public ISalesServices SalesServices => salesServices;
 
         public IGenericRespository<TEntity> GetRepository<TEntity>() where TEntity : class
         {

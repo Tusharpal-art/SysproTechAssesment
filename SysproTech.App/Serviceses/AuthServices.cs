@@ -1,6 +1,7 @@
-﻿using SysproAssigment.Shared.Response;
+﻿
 using SysproTech.App.Interfaceses;
 using SysproTech.App.Requestses.Auth;
+using SysproTech.App.Res;
 using SysproTech.App.Responses;
 
 namespace SysproTech.App.Serviceses

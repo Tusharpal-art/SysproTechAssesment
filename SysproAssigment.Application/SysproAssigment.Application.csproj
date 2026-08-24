@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Mediator\Sales\Command\" />
-    <Folder Include="Mediator\Sales\Queries\" />
-    <Folder Include="Request\Sales\" />
-    <Folder Include="Response\Sales\" />
     <Folder Include="Validation\Sales\" />
   </ItemGroup>
 

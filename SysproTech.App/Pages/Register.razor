@@ -1,0 +1,175 @@
+@page "/register"
+@using Blazored.FluentValidation
+@using SysproTech.App.Interfaceses
+@using SysproTech.App.Requestses.Auth
+@using SysproTech.App.Responses
+@inject IAuthServices AuthServices
+@inject NavigationManager Navigation
+
+<PageTitle>Register - SysproTech</PageTitle>
+
+<div class="register-wrapper">
+    <div class="background-decor">
+        <div class="glow-circle circle-1"></div>
+        <div class="glow-circle circle-2"></div>
+    </div>
+
+    <div class="register-card">
+        <div class="card-header-brand">
+            <div class="brand-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+            </div>
+            <h2>Create an Account</h2>
+            <p class="subtitle">Join SysproTech to get started</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger animate-fade-in" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>@errorMessage</span>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success animate-fade-in" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>@successMessage</span>
+            </div>
+        }
+
+        <EditForm Model="@registrationModel" OnValidSubmit="HandleRegister">
+            <FluentValidationValidator />
+
+            <div class="form-group mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <div class="input-with-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="field-icon">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <InputText id="name" class="form-control" placeholder="e.g. John Doe" @bind-Value="registrationModel.Name" />
+                </div>
+                <ValidationMessage For="@(() => registrationModel.Name)" class="validation-message" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-with-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="field-icon">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <InputText id="email" class="form-control" placeholder="e.g. user@example.com" @bind-Value="registrationModel.Email" />
+                </div>
+                <ValidationMessage For="@(() => registrationModel.Email)" class="validation-message" />
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="field-icon">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <InputText id="password" type="@(showPassword ? "text" : "password")" class="form-control" placeholder="Create a strong password" @bind-Value="registrationModel.Password" />
+                    <button type="button" class="btn-toggle-password" @onclick="TogglePasswordVisibility" title="Toggle password visibility">
+                        @if (showPassword)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        }
+                    </button>
+                </div>
+                <ValidationMessage For="@(() => registrationModel.Password)" class="validation-message" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 btn-register" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Creating account...</span>
+                }
+                else
+                {
+                    <span>Register Now</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                }
+            </button>
+        </EditForm>
+
+        <div class="card-footer-text">
+            <span>Already have an account?</span>
+            <a href="/login" class="login-link">Sign In</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegistrationModel registrationModel = new RegistrationModel { Name = "", Email = "", Password = "" };
+    private bool isLoading = false;
+    private bool showPassword = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+
+    private async Task HandleRegister()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var result = await AuthServices.Register(registrationModel);
+
+            if (result != null && result.Success)
+            {
+                successMessage = $"Account registered successfully for {result.Data?.Name ?? registrationModel.Name}! Redirecting to login...";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                errorMessage = result?.ErrorMessage ?? "Registration failed. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

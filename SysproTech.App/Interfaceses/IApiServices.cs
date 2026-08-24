@@ -1,4 +1,5 @@
-﻿using SysproAssigment.Shared.Response;
+﻿
+using SysproTech.App.Res;
 
 namespace SysproTech.App.Interfaceses
 {
