@@ -15,12 +15,14 @@ namespace SysproAssigment.Infrastructure.Repositories
     {
        
 
-        public async Task<AllRecord<Sales>> GetAllSalesList(GetAllOderRequest request)
+        public async Task<AllRecord<Sales>> GetAllSalesList(GetAllOderRequest request,Guid? UserId)
         {
             IQueryable<Sales> SalesList = context.Sales;
            
-
-
+            if(UserId!=null)
+            {
+                SalesList = context.Sales.Where(x => x.OrderbyId == UserId);
+            }
 
 
             // apply searching

@@ -10,11 +10,18 @@ using System.Text;
 
 namespace SysproAssigment.Application.Mediator.Sales.Queries
 {
-    public class GetAllOrderListQueryHandler(IMapper mapper,IUnitOfWork unitOfWork) : IRequestHandler<GetAllOderRequest, Result<AllRecord<SalesReponse>>>
+    public class GetAllOrderListQueryHandler(IMapper mapper,IUnitOfWork unitOfWork,IAuthServices auth) : IRequestHandler<GetAllOderRequest, Result<AllRecord<SalesReponse>>>
     {
         public async Task<Result<AllRecord<SalesReponse>>> Handle(GetAllOderRequest request, CancellationToken cancellationToken)
         {
-            var response = await unitOfWork.SalesServices.GetAllSalesList(request);
+
+            var currentUSer = await auth.GetCurrentUser();
+            if(currentUSer==null)
+            {
+               return Result<AllRecord<SalesReponse>>.Failure("current user not exist please login first..");
+            }
+
+            var response = await unitOfWork.SalesServices.GetAllSalesList(request,currentUSer.Data?.Id);
 
             List<SalesReponse> salesList = mapper.Map<List<SalesReponse>>(response.Records);
 

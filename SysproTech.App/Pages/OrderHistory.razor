@@ -6,7 +6,7 @@
 @using SysproTech.App.Responses
 @inject ISalesServices SalesServices
 @inject NavigationManager Navigation
-@attribute [Authorize]
+@attribute [Authorize(Roles ="User")]
 
 <PageTitle>Order History - SysproTech</PageTitle>
 

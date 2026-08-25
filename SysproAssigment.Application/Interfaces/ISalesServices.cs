@@ -10,7 +10,7 @@ namespace SysproAssigment.Application.Interfaces
 {
     public interface ISalesServices
     {
-        Task<AllRecord<Sales>> GetAllSalesList(GetAllOderRequest request);
+        Task<AllRecord<Sales>> GetAllSalesList(GetAllOderRequest request,Guid? UserId);
         
     }
 }

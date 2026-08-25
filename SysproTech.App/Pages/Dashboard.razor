@@ -7,7 +7,7 @@
 @using SysproTech.App.Responses
 @inject IProductServices ProductServices
 @inject NavigationManager Navigation
-@attribute [Authorize]
+@attribute [Authorize(Roles ="User,Admin")]
 
 <PageTitle>Dashboard - Products</PageTitle>
 
